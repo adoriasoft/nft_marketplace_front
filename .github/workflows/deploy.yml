@@ -1,0 +1,36 @@
+name: Deploy React App to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main  # Change this if your default branch is not 'main'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    env:
+    VITE_WALLET_CONNECT_PROJECT_ID: "779a0f5b985223af172f2d4fd0002cf9"
+    VITE_CONTRACT_ADDRESS: "0x9873c165e6e01fe4c2d12f9c0439eac3a79576e5"
+    VITE_PINATA_API_KEY: "81578e73a5a436420f5b"
+    VITE_PINATA_SECRET_KEY: "c392714b2667d89c78a2a6c332cb687322707716a7422ec6704d45cf6dd26c73"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build React app
+        run: npm run build
+
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: gh-pages  # Branch where built files will be stored
+          folder: build      # Folder to deploy
