@@ -1,29 +1,13 @@
-import { create } from 'ipfs-http-client'
-
-// Get Pinata credentials from environment variables
-const PINATA_API_KEY = import.meta.env.VITE_PINATA_API_KEY
-const PINATA_SECRET_KEY = import.meta.env.VITE_PINATA_SECRET_KEY
-
-if (!PINATA_API_KEY || !PINATA_SECRET_KEY) {
-  throw new Error('Pinata credentials are not set in environment variables')
-}
-
-// Initialize IPFS client with Pinata credentials
-const ipfs = create({ 
-  url: 'https://api.pinata.cloud',
-  headers: {
-    'pinata_api_key': PINATA_API_KEY,
-    'pinata_secret_api_key': PINATA_SECRET_KEY
-  }
-})
-
 export interface NFTMetadata {
   name: string
   description: string
   image: string
 }
 
-export async function uploadToIPFS(metadata: NFTMetadata): Promise<string> {
+const PINATA_API_KEY = import.meta.env.VITE_PINATA_API_KEY
+const PINATA_SECRET_KEY = import.meta.env.VITE_PINATA_SECRET_KEY
+
+export const uploadToIPFS = async (metadata: NFTMetadata): Promise<string> => {
   try {
     if (!PINATA_API_KEY || !PINATA_SECRET_KEY) {
       throw new Error('Pinata credentials are not configured')

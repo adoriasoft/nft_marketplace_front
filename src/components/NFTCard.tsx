@@ -1,50 +1,40 @@
 import { FC } from 'react'
 
-interface NFTCardProps {
-  id: string
+interface NFTMetadata {
   name: string
   description: string
-  imageUrl: string
-  price: string
-  owner: string
-  onBuy?: () => void
+  image: string
 }
 
-const NFTCard: FC<NFTCardProps> = ({
-  id,
-  name,
-  description,
-  imageUrl,
-  price,
-  owner,
-  onBuy,
-}) => {
+interface NFTCardProps {
+  metadata: NFTMetadata
+  onList: (nft: { metadata: NFTMetadata }) => void
+  onCancel: (nft: { metadata: NFTMetadata }) => void
+  isListing: boolean
+  isCancelling: boolean
+}
+
+const NFTCard: FC<NFTCardProps> = ({ metadata, onList, onCancel, isListing, isCancelling }) => {
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden">
-      <div className="aspect-w-1 aspect-h-1">
-        <img
-          src={imageUrl}
-          alt={name}
-          className="w-full h-48 object-cover"
-        />
-      </div>
+    <div className="border rounded-lg overflow-hidden shadow-lg">
+      <img src={metadata.image} alt={metadata.name} className="w-full h-48 object-cover" />
       <div className="p-4">
-        <h3 className="text-lg font-semibold text-gray-900">{name}</h3>
-        <p className="mt-1 text-sm text-gray-500">{description}</p>
-        <div className="mt-4 flex items-center justify-between">
-          <div className="text-sm text-gray-500">
-            Owner: {owner.slice(0, 6)}...{owner.slice(-4)}
-          </div>
-          <div className="text-lg font-bold text-indigo-600">{price} ETH</div>
-        </div>
-        {onBuy && (
-          <button
-            onClick={onBuy}
-            className="mt-4 w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-          >
-            Buy Now
-          </button>
-        )}
+        <h3 className="text-xl font-semibold mb-2">{metadata.name}</h3>
+        <p className="text-gray-600 mb-2">{metadata.description}</p>
+        <button
+          onClick={() => onList({ metadata })}
+          disabled={isListing}
+          className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 disabled:bg-gray-400"
+        >
+          {isListing ? 'Listing...' : 'List for Sale'}
+        </button>
+        <button
+          onClick={() => onCancel({ metadata })}
+          disabled={isCancelling}
+          className="w-full mt-2 bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 disabled:bg-gray-400"
+        >
+          {isCancelling ? 'Cancelling...' : 'Cancel Sale'}
+        </button>
       </div>
     </div>
   )

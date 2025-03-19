@@ -1,5 +1,5 @@
 import { FC, useEffect, useState } from 'react'
-import { useAccount, useContractRead, useContractReads, useWriteContract, useSimulateContract } from 'wagmi'
+import { useAccount, useContractRead, useContractReads, useWriteContract } from 'wagmi'
 import { formatEther } from 'viem'
 import { NFT_MARKETPLACE_ABI } from '../contracts/nftMarketplace'
 
@@ -48,15 +48,6 @@ const NFTMarketplace: FC = () => {
       functionName: 'tokenURI',
       args: [item.tokenId]
     }))
-  })
-
-  // Simulate buying NFT
-  const { data: simulateData } = useSimulateContract({
-    address: contractAddress,
-    abi: NFT_MARKETPLACE_ABI,
-    functionName: 'buyNFT',
-    args: selectedNFT ? [selectedNFT.tokenId] : undefined,
-    value: selectedNFT?.price,
   })
 
   const { writeContract: buyNFT } = useWriteContract()

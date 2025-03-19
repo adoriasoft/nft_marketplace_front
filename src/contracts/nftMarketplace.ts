@@ -1,5 +1,3 @@
-import { Abi } from 'viem'
-
 export const NFT_MARKETPLACE_ABI = [
     {
         "inputs": [],

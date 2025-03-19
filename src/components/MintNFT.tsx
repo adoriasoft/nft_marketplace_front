@@ -1,5 +1,5 @@
 import { FC, useState } from 'react'
-import { useAccount, useWriteContract, useSimulateContract } from 'wagmi'
+import { useAccount, useWriteContract } from 'wagmi'
 import { parseEther } from 'viem'
 import { NFT_MARKETPLACE_ABI } from '../contracts/nftMarketplace'
 import { uploadToIPFS } from '../utils/ipfs'

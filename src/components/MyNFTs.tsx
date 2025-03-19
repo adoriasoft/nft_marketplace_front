@@ -1,5 +1,5 @@
 import { FC, useEffect, useState } from 'react'
-import { useAccount, useContractReads, useContractRead, useWriteContract, useSimulateContract } from 'wagmi'
+import { useAccount, useContractReads, useContractRead, useWriteContract } from 'wagmi'
 import { parseEther } from 'viem'
 import { NFT_MARKETPLACE_ABI } from '../contracts/nftMarketplace'
 
@@ -18,6 +18,7 @@ const MyNFTs: FC = () => {
   const { address } = useAccount()
   const contractAddress = import.meta.env.VITE_CONTRACT_ADDRESS as `0x${string}`
   const [nfts, setNfts] = useState<NFT[]>([])
+  const { writeContract: listNFT } = useWriteContract()
   const [selectedNFT, setSelectedNFT] = useState<NFT | null>(null)
   const [listPrice, setListPrice] = useState('')
 
@@ -51,16 +52,6 @@ const MyNFTs: FC = () => {
       args: [tokenId]
     }))
   })
-
-  // Simulate listing NFT for sale
-  const { data: simulateData } = useSimulateContract({
-    address: contractAddress,
-    abi: NFT_MARKETPLACE_ABI,
-    functionName: 'listMyNFT',
-    args: selectedNFT && listPrice ? [selectedNFT.id, parseEther(listPrice)] : undefined,
-  })
-
-  const { writeContract: listNFT } = useWriteContract()
 
   const handleList = async (nft: NFT) => {
     if (!listPrice) return
