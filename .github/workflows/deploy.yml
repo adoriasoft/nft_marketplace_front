@@ -3,7 +3,7 @@ name: Deploy React App to GitHub Pages
 on:
   push:
     branches:
-      - main  # Change this if your default branch is not 'main'
+      - main
 
 jobs:
   build-and-deploy:
@@ -29,8 +29,11 @@ jobs:
       - name: Build React app
         run: npm run build
 
+      - name: Verify build folder
+        run: ls -la build || echo "Build folder not found!"
+
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          branch: gh-pages  # Branch where built files will be stored
-          folder: build      # Folder to deploy
+          branch: gh-pages
+          folder: build
