@@ -2,6 +2,7 @@ import { FC, useEffect, useState } from 'react'
 import { useAccount, useContractReads, useContractRead, useWriteContract } from 'wagmi'
 import { parseEther } from 'viem'
 import { NFT_MARKETPLACE_ABI } from '../contracts/nftMarketplace'
+import NFTCard from './NFTCard'
 
 interface NFTMetadata {
   name: string
@@ -20,7 +21,8 @@ const MyNFTs: FC = () => {
   const [nfts, setNfts] = useState<NFT[]>([])
   const { writeContract: listNFT } = useWriteContract()
   const [selectedNFT, setSelectedNFT] = useState<NFT | null>(null)
-  const [listPrice, setListPrice] = useState('')
+  const [listPrices, setListPrices] = useState<Record<string, string>>({})
+  const [isListing, setIsListing] = useState<Record<string, boolean>>({})
 
   // Get the number of NFTs owned by the user
   const { data: balance, refetch: refetchBalance } = useContractRead({
@@ -54,15 +56,18 @@ const MyNFTs: FC = () => {
   })
 
   const handleList = async (nft: NFT) => {
-    if (!listPrice) return
+    const price = listPrices[nft.id.toString()]
+    if (!price) return
 
-    const priceInWei = parseEther(listPrice)
+    const priceInWei = parseEther(price)
     if (priceInWei <= 0n) {
       alert('Price must be greater than 0')
       return
     }
 
     setSelectedNFT(nft)
+    setIsListing(prev => ({ ...prev, [nft.id.toString()]: true }))
+    
     if (listNFT) {
       try {
         await listNFT({
@@ -79,10 +84,30 @@ const MyNFTs: FC = () => {
         ])
       } finally {
         setSelectedNFT(null)
-        setListPrice('')
+        setIsListing(prev => ({ ...prev, [nft.id.toString()]: false }))
+        setListPrices(prev => ({ ...prev, [nft.id.toString()]: '' }))
       }
     }
   }
+
+  const handlePriceChange = (nftId: string, value: string) => {
+    setListPrices(prev => ({ ...prev, [nftId]: value }))
+  }
+
+  // Function to refetch all data
+  const refetchAllData = async () => {
+    await Promise.all([
+      refetchBalance(),
+      refetchTokenIds(),
+      refetchTokenURIs()
+    ])
+  }
+
+  // Set up auto-refresh interval
+  useEffect(() => {
+    const interval = setInterval(refetchAllData, 10000) // Refresh every 10 seconds
+    return () => clearInterval(interval)
+  }, [refetchBalance, refetchTokenIds, refetchTokenURIs])
 
   useEffect(() => {
     const fetchNFTs = async () => {
@@ -132,33 +157,17 @@ const MyNFTs: FC = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h2 className="text-2xl font-bold mb-6">My NFTs</h2>
+      <h2 className="text-3xl font-bold mb-8">My NFTs</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {nfts.map((nft) => (
-          <div key={nft.id.toString()} className="border rounded-lg overflow-hidden shadow-lg">
-            <img src={nft.metadata.image} alt={nft.metadata.name} className="w-full h-48 object-cover" />
-            <div className="p-4">
-              <h3 className="text-xl font-semibold mb-2">{nft.metadata.name}</h3>
-              <p className="text-gray-600 mb-2">{nft.metadata.description}</p>
-              <p className="text-sm text-gray-500 mb-2">Token ID: {nft.id.toString()}</p>
-              <div className="flex gap-4">
-                <input
-                  type="text"
-                  placeholder="Price in ETH"
-                  value={listPrice}
-                  onChange={(e) => setListPrice(e.target.value)}
-                  className="flex-1 p-2 border rounded-md"
-                />
-                <button
-                  onClick={() => handleList(nft)}
-                  disabled={selectedNFT?.id === nft.id || !listPrice}
-                  className="bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 disabled:bg-gray-400"
-                >
-                  {selectedNFT?.id === nft.id ? 'Listing...' : 'Sell'}
-                </button>
-              </div>
-            </div>
-          </div>
+          <NFTCard
+            key={nft.id.toString()}
+            metadata={nft.metadata}
+            onList={() => handleList(nft)}
+            isListing={isListing[nft.id.toString()]}
+            price={listPrices[nft.id.toString()]}
+            onPriceChange={(value) => handlePriceChange(nft.id.toString(), value)}
+          />
         ))}
       </div>
     </div>

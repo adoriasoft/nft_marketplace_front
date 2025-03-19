@@ -1,6 +1,6 @@
 import { FC } from 'react'
 
-interface NFTMetadata {
+export interface NFTMetadata {
   name: string
   description: string
   image: string
@@ -8,33 +8,47 @@ interface NFTMetadata {
 
 interface NFTCardProps {
   metadata: NFTMetadata
-  onList: (nft: { metadata: NFTMetadata }) => void
-  onCancel: (nft: { metadata: NFTMetadata }) => void
+  onList: () => void
   isListing: boolean
-  isCancelling: boolean
+  price: string
+  onPriceChange: (value: string) => void
 }
 
-const NFTCard: FC<NFTCardProps> = ({ metadata, onList, onCancel, isListing, isCancelling }) => {
+const NFTCard: FC<NFTCardProps> = ({
+  metadata,
+  onList,
+  isListing,
+  price,
+  onPriceChange
+}) => {
   return (
-    <div className="border rounded-lg overflow-hidden shadow-lg">
-      <img src={metadata.image} alt={metadata.name} className="w-full h-48 object-cover" />
-      <div className="p-4">
+    <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+      <div className="relative h-64">
+        <img 
+          src={metadata.image} 
+          alt={metadata.name} 
+          className="w-full h-full object-cover"
+        />
+      </div>
+      <div className="p-6">
         <h3 className="text-xl font-semibold mb-2">{metadata.name}</h3>
-        <p className="text-gray-600 mb-2">{metadata.description}</p>
-        <button
-          onClick={() => onList({ metadata })}
-          disabled={isListing}
-          className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 disabled:bg-gray-400"
-        >
-          {isListing ? 'Listing...' : 'List for Sale'}
-        </button>
-        <button
-          onClick={() => onCancel({ metadata })}
-          disabled={isCancelling}
-          className="w-full mt-2 bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 disabled:bg-gray-400"
-        >
-          {isCancelling ? 'Cancelling...' : 'Cancel Sale'}
-        </button>
+        <p className="text-gray-600 mb-4">{metadata.description}</p>
+        <div className="space-y-4">
+          <input
+            type="text"
+            placeholder="Price in ETH"
+            value={price}
+            onChange={(e) => onPriceChange(e.target.value)}
+            className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
+          <button
+            onClick={onList}
+            disabled={isListing || !price}
+            className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 disabled:bg-gray-400 transition-colors"
+          >
+            {isListing ? 'Listing...' : 'Sell'}
+          </button>
+        </div>
       </div>
     </div>
   )

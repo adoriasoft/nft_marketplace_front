@@ -31,18 +31,20 @@ const NFTMarketplace: FC = () => {
   const { address } = useAccount()
   const contractAddress = import.meta.env.VITE_CONTRACT_ADDRESS as `0x${string}`
   const [nfts, setNfts] = useState<NFT[]>([])
+  const { writeContract: buyNFT } = useWriteContract()
   const [selectedNFT, setSelectedNFT] = useState<NFT | null>(null)
+  const [isBuying, setIsBuying] = useState<Record<string, boolean>>({})
 
-  // Fetch all market items
+  // Fetch market items
   const { data: marketItems, refetch: refetchMarketItems } = useContractRead({
     address: contractAddress,
     abi: NFT_MARKETPLACE_ABI,
-    functionName: 'allMarketItems'
+    functionName: 'allMarketItems',
   })
 
   // Fetch token URIs for all market items
   const { data: tokenURIs, refetch: refetchTokenURIs } = useContractReads({
-    contracts: (marketItems as readonly MarketItem[] || []).map((item) => ({
+    contracts: (marketItems as unknown as MarketItem[] || []).map((item: MarketItem) => ({
       address: contractAddress,
       abi: NFT_MARKETPLACE_ABI,
       functionName: 'tokenURI',
@@ -50,11 +52,26 @@ const NFTMarketplace: FC = () => {
     }))
   })
 
-  const { writeContract: buyNFT } = useWriteContract()
   const { writeContract: cancelSale } = useWriteContract()
+
+  // Function to refetch all data
+  const refetchAllData = async () => {
+    await Promise.all([
+      refetchMarketItems(),
+      refetchTokenURIs()
+    ])
+  }
+
+  // Set up auto-refresh interval
+  useEffect(() => {
+    const interval = setInterval(refetchAllData, 10000) // Refresh every 10 seconds
+    return () => clearInterval(interval)
+  }, [refetchMarketItems, refetchTokenURIs])
 
   const handleBuy = async (nft: NFT) => {
     setSelectedNFT(nft)
+    setIsBuying(prev => ({ ...prev, [nft.tokenId.toString()]: true }))
+    
     if (buyNFT) {
       try {
         await buyNFT({
@@ -65,12 +82,10 @@ const NFTMarketplace: FC = () => {
           value: nft.price,
         })
         // Refetch all data after successful purchase
-        await Promise.all([
-          refetchMarketItems(),
-          refetchTokenURIs()
-        ])
+        await refetchAllData()
       } finally {
         setSelectedNFT(null)
+        setIsBuying(prev => ({ ...prev, [nft.tokenId.toString()]: false }))
       }
     }
   }
@@ -86,10 +101,7 @@ const NFTMarketplace: FC = () => {
           args: [nft.tokenId],
         })
         // Refetch all data after successful cancellation
-        await Promise.all([
-          refetchMarketItems(),
-          refetchTokenURIs()
-        ])
+        await refetchAllData()
       } finally {
         setSelectedNFT(null)
       }
@@ -101,19 +113,18 @@ const NFTMarketplace: FC = () => {
       if (!tokenURIs || !marketItems) return
 
       const nftPromises = tokenURIs.map(async (uri, index) => {
-        const marketItem = (marketItems as readonly MarketItem[])[index]
+        const marketItem = (marketItems as unknown as MarketItem[])[index]
         if (!uri.result || !marketItem) return null
-        
         try {
           const response = await fetch(`https://ipfs.io/ipfs/${uri.result.toString().replace('ipfs://', '')}`)
           const metadata = await response.json()
           const nft: NFT = {
             tokenId: marketItem.tokenId,
-            metadata,
             price: marketItem.price,
             seller: marketItem.seller,
-            status: marketItem.status,
             buyer: marketItem.buyer,
+            status: marketItem.status,
+            metadata,
           }
           return nft
         } catch (error) {
@@ -175,7 +186,7 @@ const NFTMarketplace: FC = () => {
         {section === 'Active Sales' && nft.status === 0 && (
           <button
             onClick={() => handleBuy(nft)}
-            disabled={selectedNFT?.tokenId === nft.tokenId}
+            disabled={selectedNFT?.tokenId === nft.tokenId || isBuying[nft.tokenId.toString()]}
             className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 disabled:bg-gray-400"
           >
             {selectedNFT?.tokenId === nft.tokenId ? 'Buying...' : 'Buy'}
