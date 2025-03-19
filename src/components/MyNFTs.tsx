@@ -20,7 +20,6 @@ const MyNFTs: FC = () => {
   const contractAddress = import.meta.env.VITE_CONTRACT_ADDRESS as `0x${string}`
   const [nfts, setNfts] = useState<NFT[]>([])
   const { writeContract: listNFT } = useWriteContract()
-  const [selectedNFT, setSelectedNFT] = useState<NFT | null>(null)
   const [listPrices, setListPrices] = useState<Record<string, string>>({})
   const [isListing, setIsListing] = useState<Record<string, boolean>>({})
 
@@ -64,8 +63,7 @@ const MyNFTs: FC = () => {
       alert('Price must be greater than 0')
       return
     }
-
-    setSelectedNFT(nft)
+    
     setIsListing(prev => ({ ...prev, [nft.id.toString()]: true }))
     
     if (listNFT) {
@@ -83,7 +81,6 @@ const MyNFTs: FC = () => {
           refetchTokenURIs()
         ])
       } finally {
-        setSelectedNFT(null)
         setIsListing(prev => ({ ...prev, [nft.id.toString()]: false }))
         setListPrices(prev => ({ ...prev, [nft.id.toString()]: '' }))
       }
