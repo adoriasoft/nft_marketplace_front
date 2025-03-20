@@ -2,6 +2,7 @@ import { ConnectButton } from '@rainbow-me/rainbowkit'
 import MintNFT from './components/MintNFT'
 import NFTMarketplace from './components/NFTMarketplace'
 import MyNFTs from './components/MyNFTs'
+import Banner from './components/Banner'
 
 function App() {
   return (
@@ -18,6 +19,8 @@ function App() {
           </div>
         </div>
       </nav>
+
+      <Banner />
 
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
